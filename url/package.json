@@ -1,0 +1,25 @@
+{
+  "name": "linky-node",
+  "version": "1.0.0",
+  "description": "Simple URL shortener (Express) port of the provided FastAPI app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "url",
+    "shortener",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
+
