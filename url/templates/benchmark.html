@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSA Benchmark - URL Shortener</title>
+  <link rel="stylesheet" href="/static/fonts.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <style>
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .controls {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .control-section {
+      margin-bottom: 25px;
+    }
+
+    .control-section h3 {
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .control-row label {
+      font-weight: 500;
+      min-width: 100px;
+    }
+
+    .control-row input,
+    .control-row select {
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2rem;
+    }
+
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .results {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .results h2 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .tab {
+      padding: 12px 25px;
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.1rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      color: white;
+      border-bottom-color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.2);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+    }
+
+    tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .metric-best {
+      background: rgba(76, 175, 80, 0.3);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-weight: 600;
+    }
+
+    .metric-worst {
+      background: rgba(244, 67, 54, 0.3);
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+    .capacity-section {
+      margin-bottom: 40px;
+    }
+
+    .capacity-title {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+
+    .summary {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .summary h4 {
+      margin-bottom: 10px;
+      font-size: 1.3rem;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: white;
+      text-decoration: none;
+      font-size: 1.1rem;
+      transition: opacity 0.3s;
+    }
+
+    .back-link:hover {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to URL Shortener</a>
+
+    <div class="header">
+      <h1>🔬 DSA Benchmark Suite</h1>
+      <p>Compare HashMap Collision Strategies & Hash Functions</p>
+    </div>
+
+    <div class="controls">
+      <div class="control-section">
+        <h3>📊 Collision Strategy Benchmark</h3>
+        <p>Tests all 4 collision strategies (Separate Chaining, Linear Probing, Double Hashing, Cuckoo) with MD5 hash function</p>
+        <div class="control-row">
+          <label>URL Count:</label>
+          <input type="number" id="collision-url-count" value="10000" min="1000" max="50000" step="1000" />
+          <button class="btn btn-primary" onclick="runCollisionBenchmark()" id="collision-btn">
+            Run Collision Strategy Test
+          </button>
+        </div>
+        <small>Tests with 3 different capacities: 8192, 16384, 32768</small>
+      </div>
+
+      <div class="control-section">
+        <h3>🔐 Hash Function Benchmark</h3>
+        <p>Tests all 6 hash functions (MD5, SHA1, SHA256, DJB2, MurmurHash3, CityHash) with Separate Chaining strategy</p>
+        <div class="control-row">
+          <label>URL Count:</label>
+          <input type="number" id="hash-url-count" value="10000" min="1000" max="50000" step="1000" />
+          <label>Capacity:</label>
+          <input type="number" id="hash-capacity" value="16384" min="1024" max="65536" step="1024" />
+          <button class="btn btn-secondary" onclick="runHashBenchmark()" id="hash-btn">
+            Run Hash Function Test
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p id="loading-text">Running benchmark...</p>
+    </div>
+
+    <div id="results" class="results" style="display: none;">
+      <h2>Benchmark Results</h2>
+
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('collision')">Collision Strategies</button>
+        <button class="tab" onclick="showTab('hash')">Hash Functions</button>
+      </div>
+
+      <div id="collision-results" class="tab-content active"></div>
+      <div id="hash-results" class="tab-content"></div>
+    </div>
+  </div>
+
+  <script>
+    let collisionData = null;
+    let hashData = null;
+
+    async function runCollisionBenchmark() {
+      const urlCount = parseInt(document.getElementById('collision-url-count').value);
+      const btn = document.getElementById('collision-btn');
+      const loading = document.getElementById('loading');
+      const loadingText = document.getElementById('loading-text');
+
+      btn.disabled = true;
+      loading.style.display = 'block';
+      loadingText.textContent = `Running collision strategy benchmark with ${urlCount} URLs...`;
+
+      try {
+        const response = await fetch(`/api/benchmark/collision-strategies?url_count=${urlCount}`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          collisionData = data;
+          displayCollisionResults(data);
+          document.getElementById('results').style.display = 'block';
+          showTab('collision');
+        }
+      } catch (error) {
+        alert('Benchmark failed: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        loading.style.display = 'none';
+      }
+    }
+
+    async function runHashBenchmark() {
+      const urlCount = parseInt(document.getElementById('hash-url-count').value);
+      const capacity = parseInt(document.getElementById('hash-capacity').value);
+      const btn = document.getElementById('hash-btn');
+      const loading = document.getElementById('loading');
+      const loadingText = document.getElementById('loading-text');
+
+      btn.disabled = true;
+      loading.style.display = 'block';
+      loadingText.textContent = `Running hash function benchmark with ${urlCount} URLs...`;
+
+      try {
+        const response = await fetch(`/api/benchmark/hash-functions?url_count=${urlCount}&capacity=${capacity}`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          hashData = data;
+          displayHashResults(data);
+          document.getElementById('results').style.display = 'block';
+          showTab('hash');
+        }
+      } catch (error) {
+        alert('Benchmark failed: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        loading.style.display = 'none';
+      }
+    }
+
+    function showTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      if (tab === 'collision') {
+        document.querySelectorAll('.tab')[0].classList.add('active');
+        document.getElementById('collision-results').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab')[1].classList.add('active');
+        document.getElementById('hash-results').classList.add('active');
+      }
+    }
+
+    function displayCollisionResults(data) {
+      const container = document.getElementById('collision-results');
+      let html = '';
+
+      html += `<div class="summary">
+        <h4>Test Parameters</h4>
+        <div class="summary-item"><span>URLs Tested:</span><strong>${data.test_params.url_count.toLocaleString()}</strong></div>
+        <div class="summary-item"><span>Hash Function:</span><strong>${data.test_params.hash_function.toUpperCase()}</strong></div>
+        <div class="summary-item"><span>Capacities Tested:</span><strong>${data.test_params.capacities.join(', ')}</strong></div>
+      </div>`;
+
+      Object.keys(data.results).forEach(capacity => {
+        html += `<div class="capacity-section">
+          <div class="capacity-title">Capacity: ${parseInt(capacity).toLocaleString()} (Load Factor: ${((data.test_params.url_count / capacity) * 100).toFixed(1)}%)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Strategy</th>
+                <th>Collisions</th>
+                <th>Avg Probe</th>
+                <th>Max Probe</th>
+                <th>Rehashes</th>
+                <th>Avg Insert (μs)</th>
+                <th>Total Insert (ms)</th>
+                <th>Avg Lookup (μs)</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+        const strategies = data.results[capacity];
+        const metrics = ['collision_count', 'avg_probe_length', 'max_probe_length', 'rehash_count',
+                         'avg_insertion_time_us', 'total_insertion_time_ms', 'avg_lookup_time_us'];
+
+        // Find best/worst for each metric
+        const best = {};
+        const worst = {};
+        metrics.forEach(metric => {
+          const values = Object.values(strategies).map(s => s[metric]);
+          best[metric] = Math.min(...values);
+          worst[metric] = Math.max(...values);
+        });
+
+        Object.keys(strategies).forEach(strategy => {
+          const s = strategies[strategy];
+          html += `<tr>
+            <td><strong>${strategy.replace(/_/g, ' ').toUpperCase()}</strong></td>
+            <td ${s.collision_count === best.collision_count ? 'class="metric-best"' : s.collision_count === worst.collision_count ? 'class="metric-worst"' : ''}>${s.collision_count.toLocaleString()}</td>
+            <td ${s.avg_probe_length === best.avg_probe_length ? 'class="metric-best"' : s.avg_probe_length === worst.avg_probe_length ? 'class="metric-worst"' : ''}>${s.avg_probe_length}</td>
+            <td ${s.max_probe_length === best.max_probe_length ? 'class="metric-best"' : s.max_probe_length === worst.max_probe_length ? 'class="metric-worst"' : ''}>${s.max_probe_length}</td>
+            <td ${s.rehash_count === best.rehash_count ? 'class="metric-best"' : s.rehash_count === worst.rehash_count ? 'class="metric-worst"' : ''}>${s.rehash_count}</td>
+            <td ${s.avg_insertion_time_us === best.avg_insertion_time_us ? 'class="metric-best"' : s.avg_insertion_time_us === worst.avg_insertion_time_us ? 'class="metric-worst"' : ''}>${s.avg_insertion_time_us}</td>
+            <td ${s.total_insertion_time_ms === best.total_insertion_time_ms ? 'class="metric-best"' : s.total_insertion_time_ms === worst.total_insertion_time_ms ? 'class="metric-worst"' : ''}>${s.total_insertion_time_ms}</td>
+            <td ${s.avg_lookup_time_us === best.avg_lookup_time_us ? 'class="metric-best"' : s.avg_lookup_time_us === worst.avg_lookup_time_us ? 'class="metric-worst"' : ''}>${s.avg_lookup_time_us}</td>
+          </tr>`;
+        });
+
+        html += '</tbody></table></div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    function displayHashResults(data) {
+      const container = document.getElementById('hash-results');
+      let html = '';
+
+      html += `<div class="summary">
+        <h4>Test Parameters</h4>
+        <div class="summary-item"><span>URLs Tested:</span><strong>${data.test_params.url_count.toLocaleString()}</strong></div>
+        <div class="summary-item"><span>Collision Strategy:</span><strong>${data.test_params.collision_strategy.toUpperCase()}</strong></div>
+        <div class="summary-item"><span>Capacity:</span><strong>${data.test_params.capacity.toLocaleString()}</strong></div>
+        <div class="summary-item"><span>Load Factor:</span><strong>${((data.test_params.url_count / data.test_params.capacity) * 100).toFixed(1)}%</strong></div>
+      </div>`;
+
+      html += `<table>
+        <thead>
+          <tr>
+            <th>Hash Function</th>
+            <th>Collisions</th>
+            <th>Avg Probe</th>
+            <th>Distribution σ</th>
+            <th>Chi-Square</th>
+            <th>Avg Hash (μs)</th>
+            <th>Avg Insert (μs)</th>
+            <th>Avg Lookup (μs)</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      const hashes = data.results;
+      const metrics = ['collision_count', 'avg_probe_length', 'distribution_std_dev', 'chi_square_statistic',
+                       'avg_hash_time_us', 'avg_insertion_time_us', 'avg_lookup_time_us'];
+
+      // Find best/worst for each metric
+      const best = {};
+      const worst = {};
+      metrics.forEach(metric => {
+        const values = Object.values(hashes).map(h => h[metric]);
+        best[metric] = Math.min(...values);
+        worst[metric] = Math.max(...values);
+      });
+
+      Object.keys(hashes).forEach(hashFn => {
+        const h = hashes[hashFn];
+        html += `<tr>
+          <td><strong>${hashFn.toUpperCase()}</strong></td>
+          <td ${h.collision_count === best.collision_count ? 'class="metric-best"' : h.collision_count === worst.collision_count ? 'class="metric-worst"' : ''}>${h.collision_count.toLocaleString()}</td>
+          <td ${h.avg_probe_length === best.avg_probe_length ? 'class="metric-best"' : h.avg_probe_length === worst.avg_probe_length ? 'class="metric-worst"' : ''}>${h.avg_probe_length}</td>
+          <td ${h.distribution_std_dev === best.distribution_std_dev ? 'class="metric-best"' : h.distribution_std_dev === worst.distribution_std_dev ? 'class="metric-worst"' : ''}>${h.distribution_std_dev}</td>
+          <td ${h.chi_square_statistic === best.chi_square_statistic ? 'class="metric-best"' : h.chi_square_statistic === worst.chi_square_statistic ? 'class="metric-worst"' : ''}>${h.chi_square_statistic}</td>
+          <td ${h.avg_hash_time_us === best.avg_hash_time_us ? 'class="metric-best"' : h.avg_hash_time_us === worst.avg_hash_time_us ? 'class="metric-worst"' : ''}>${h.avg_hash_time_us}</td>
+          <td ${h.avg_insertion_time_us === best.avg_insertion_time_us ? 'class="metric-best"' : h.avg_insertion_time_us === worst.avg_insertion_time_us ? 'class="metric-worst"' : ''}>${h.avg_insertion_time_us}</td>
+          <td ${h.avg_lookup_time_us === best.avg_lookup_time_us ? 'class="metric-best"' : h.avg_lookup_time_us === worst.avg_lookup_time_us ? 'class="metric-worst"' : ''}>${h.avg_lookup_time_us}</td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+
+      html += `<div class="summary">
+        <h4>📈 Key Insights</h4>
+        <p><strong>Distribution σ (Standard Deviation):</strong> Lower is better - indicates more uniform distribution across buckets</p>
+        <p><strong>Chi-Square Statistic:</strong> Lower values indicate better uniformity. Values close to capacity indicate good distribution.</p>
+        <p><strong>Collisions:</strong> Lower is better - fewer items map to same bucket</p>
+        <p><strong>Hash Computation Time:</strong> Speed of computing the hash (MD5/SHA256 are cryptographic, so slower; DJB2/Murmur3 are faster)</p>
+      </div>`;
+
+      container.innerHTML = html;
+    }
+  </script>
+</body>
+
+</html>
