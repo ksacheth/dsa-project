@@ -911,13 +911,12 @@ class BenchmarkRunner:
     """Runs comprehensive benchmarks on HashMap implementations"""
 
     @staticmethod
-    def benchmark_collision_strategies(url_count: int = 10000, capacities: List[int] = None):
-        """Test all collision strategies with a fixed hash function"""
+    def benchmark_collision_strategies(url_count: int = 10000, capacities: List[int] = None, hash_fn_name: str = "md5"):
+        """Test all collision strategies with a specified hash function"""
         if capacities is None:
             capacities = [8192, 16384, 32768]
 
         strategies = ["separate_chaining", "linear_probing", "double_hashing", "cuckoo"]
-        hash_fn = "md5"  # Fixed hash function
 
         results = {}
         urls = generate_test_urls(url_count)
@@ -926,12 +925,12 @@ class BenchmarkRunner:
             results[capacity] = {}
 
             for strategy in strategies:
-                logger.info(f"Testing {strategy} with capacity {capacity}")
+                logger.info(f"Testing {strategy} with capacity {capacity} using {hash_fn_name}")
 
                 hashmap = InstrumentedHashMap(
                     capacity=capacity,
                     strategy=strategy,
-                    hash_fn_name=hash_fn
+                    hash_fn_name=hash_fn_name
                 )
 
                 # Insert all URLs
@@ -950,24 +949,23 @@ class BenchmarkRunner:
                 # Get metrics
                 metrics = hashmap.get_metrics_summary()
                 metrics["strategy"] = strategy
-                metrics["hash_function"] = hash_fn
+                metrics["hash_function"] = hash_fn_name
                 metrics["test_url_count"] = url_count
 
                 results[capacity][strategy] = metrics
 
-        return results
+        return results, urls
 
     @staticmethod
-    def benchmark_hash_functions(url_count: int = 10000, capacity: int = 16384):
-        """Test all hash functions with a fixed collision strategy"""
+    def benchmark_hash_functions(url_count: int = 10000, capacity: int = 16384, strategy: str = "separate_chaining"):
+        """Test all hash functions with a specified collision strategy"""
         hash_functions = list(HASH_FUNCTIONS.keys())
-        strategy = "separate_chaining"  # Fixed strategy
 
         results = {}
         urls = generate_test_urls(url_count)
 
         for hash_fn in hash_functions:
-            logger.info(f"Testing hash function: {hash_fn}")
+            logger.info(f"Testing hash function: {hash_fn} with strategy {strategy}")
 
             hashmap = InstrumentedHashMap(
                 capacity=capacity,
@@ -1016,7 +1014,7 @@ class BenchmarkRunner:
 
             results[hash_fn] = metrics
 
-        return results
+        return results, urls
 
 # In-memory storage for benchmark results
 benchmark_results_cache = {}
@@ -1090,15 +1088,16 @@ async def render_benchmark_page(request: Request):
 @app.post("/api/benchmark/collision-strategies")
 async def run_collision_benchmark(
     url_count: int = 10000,
-    capacities: List[int] = None
+    capacities: List[int] = None,
+    hash_function: str = "md5"
 ):
     """Run benchmark comparing collision strategies"""
     try:
         if capacities is None:
             capacities = [8192, 16384, 32768]
 
-        logger.info(f"Starting collision strategy benchmark with {url_count} URLs")
-        results = BenchmarkRunner.benchmark_collision_strategies(url_count, capacities)
+        logger.info(f"Starting collision strategy benchmark with {url_count} URLs using {hash_function}")
+        results, urls = BenchmarkRunner.benchmark_collision_strategies(url_count, capacities, hash_function)
 
         # Cache results
         benchmark_results_cache["collision_strategies"] = results
@@ -1109,7 +1108,8 @@ async def run_collision_benchmark(
             "test_params": {
                 "url_count": url_count,
                 "capacities": capacities,
-                "hash_function": "md5"
+                "hash_function": hash_function,
+                "sample_urls": urls[:50]  # Return first 50 URLs as sample
             }
         })
     except Exception as e:
@@ -1119,12 +1119,13 @@ async def run_collision_benchmark(
 @app.post("/api/benchmark/hash-functions")
 async def run_hash_benchmark(
     url_count: int = 10000,
-    capacity: int = 16384
+    capacity: int = 16384,
+    strategy: str = "separate_chaining"
 ):
     """Run benchmark comparing hash functions"""
     try:
-        logger.info(f"Starting hash function benchmark with {url_count} URLs")
-        results = BenchmarkRunner.benchmark_hash_functions(url_count, capacity)
+        logger.info(f"Starting hash function benchmark with {url_count} URLs using {strategy}")
+        results, urls = BenchmarkRunner.benchmark_hash_functions(url_count, capacity, strategy)
 
         # Cache results
         benchmark_results_cache["hash_functions"] = results
@@ -1135,7 +1136,8 @@ async def run_hash_benchmark(
             "test_params": {
                 "url_count": url_count,
                 "capacity": capacity,
-                "collision_strategy": "separate_chaining"
+                "collision_strategy": strategy,
+                "sample_urls": urls[:50]  # Return first 50 URLs as sample
             }
         })
     except Exception as e:
