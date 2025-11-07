@@ -17,9 +17,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from jinja2 import Environment, FileSystemLoader
 from loguru import logger
 
-# -------------------------------
-# Setup
-# -------------------------------
+
 logger.add(sys.stdout, format="{time} {level} {message}", level="DEBUG")
 
 app = FastAPI()
@@ -31,26 +29,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Paths
 package_dir = os.path.dirname(__file__)
 static_dir = os.path.join(package_dir, "static")
 fonts_dir = os.path.join(static_dir, "fonts/IBM_Plex")
 templates_dir = os.path.join(package_dir, "templates")
 
-# Mount static if present (avoids crash if folders not created yet)
 if os.path.isdir(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 if os.path.isdir(fonts_dir):
     app.mount("/fonts", StaticFiles(directory=fonts_dir), name="fonts")
 
-# Jinja
 jinja_env = Environment(loader=FileSystemLoader(templates_dir))
 templates = Jinja2Templates(directory=templates_dir)
 templates.env = jinja_env
 
-# -------------------------------
-# Base62 + two hash functions (md5 + sha1)
-# -------------------------------
+
+# Base62 + two hash functions 
+
 BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 def base62_encode(num: int) -> str:
@@ -64,7 +59,7 @@ def base62_encode(num: int) -> str:
     arr.reverse()
     return "".join(arr)
 
-# Multiple hash functions for benchmarking
+# Multiple hash functions 
 def hash_fn_md5(s: str) -> int:
     return int.from_bytes(hashlib.md5(s.encode("utf-8")).digest(), "big")
 
@@ -74,8 +69,8 @@ def hash_fn_sha1(s: str) -> int:
 def hash_fn_sha256(s: str) -> int:
     return int.from_bytes(hashlib.sha256(s.encode("utf-8")).digest(), "big")
 
-def hash_fn_djb2(s: str) -> int:
-    """DJB2 hash - simple multiplicative hash"""
+# speed and distribution property
+def hash_fn_djb2(s: str) -> int: 
     h = 5381
     for c in s:
         h = ((h << 5) + h) + ord(c)  # h * 33 + c
@@ -89,7 +84,7 @@ HASH_FUNCTIONS = {
     "djb2": hash_fn_djb2,
 }
 
-# Shortcode generator — includes timestamp so same URL can yield different codes
+# Shortcode generator 
 def generate_code_with_hash(
     url: str,
     *,
@@ -107,9 +102,9 @@ def generate_code_with_hash(
         code = (code * ((length // len(code)) + 1))[:length]
     return code[:length]
 
-# -------------------------------
+
 # Instrumented HashMap for benchmarking
-# -------------------------------
+
 class InstrumentedHashMap:
     """HashMap with comprehensive metrics collection for benchmarking"""
     def __init__(self, capacity=2048, strategy="separate_chaining", hash_fn_name="md5"):
@@ -311,6 +306,7 @@ class InstrumentedHashMap:
         return result
 
     def _grow(self):
+        print("Grow method is called")
         old = self.__dict__.copy()
         new_capacity = self.capacity * 2
         self.capacity = new_capacity
@@ -374,9 +370,9 @@ class InstrumentedHashMap:
             "avg_hash_time_us": round(sum(hash_times) / max(1, len(hash_times)) * 1_000_000, 4) if hash_times else 0,
         }
 
-# -------------------------------
+
 # Hash store with 4 collision strategies
-# -------------------------------
+
 class HashMap:
     def __init__(self, capacity=2048, strategy="separate_chaining"):
         self.capacity = max(16, capacity)
@@ -562,17 +558,17 @@ class HashMap:
                 if k:
                     self.insert(k, v)
 
-# -------------------------------
+
 # Multi-store to support dropdown strategies
-# -------------------------------
+
 STRATEGIES = ["separate_chaining", "linear_probing", "double_hashing", "cuckoo"]
 stores: Dict[str, HashMap] = {s: HashMap(capacity=2048, strategy=s) for s in STRATEGIES}
 CLICK_STATS: Dict[str, Dict[str, int]] = {s: {} for s in STRATEGIES}
 expiry_heaps: Dict[str, list] = {s: [] for s in STRATEGIES}  # list[(timestamp, code)]
 
-# -------------------------------
+
 # Expiry cleanup
-# -------------------------------
+
 def cleanup_expired(strategy: Optional[str] = None):
     now = datetime.now().timestamp()
     strategies = [strategy] if strategy else STRATEGIES
@@ -587,9 +583,9 @@ def cleanup_expired(strategy: Optional[str] = None):
                 store.delete(code)
                 CLICK_STATS[strat].pop(code, None)
 
-# -------------------------------
+
 # URL Generator for Benchmarking
-# -------------------------------
+
 def generate_test_urls(count: int = 10000) -> List[str]:
     """Generate realistic URLs for testing"""
     urls = []
@@ -645,9 +641,9 @@ def generate_test_urls(count: int = 10000) -> List[str]:
 
     return urls
 
-# -------------------------------
+
 # Benchmark Runner
-# -------------------------------
+
 class BenchmarkRunner:
     """Runs comprehensive benchmarks on HashMap implementations"""
 
@@ -720,7 +716,6 @@ class BenchmarkRunner:
             # Insert all URLs
             for url in urls:
                 hashmap.insert(url, {"url": url})
-                # Track bucket distribution for separate chaining
                 if strategy == "separate_chaining":
                     idx = hashmap._h1(url)
                     bucket_sizes[idx] = len(hashmap.buckets[idx])
@@ -757,20 +752,20 @@ benchmark_results_cache = {
     "hash_functions": []
 }
 
-# -------------------------------
+
 # Routes
-# -------------------------------
+
 @app.get("/")
 async def render_page(request: Request):
     # expects templates/page.html to exist
-    return templates.TemplateResponse("page.html", {"request": request, "title": "Linky"})
+    return templates.TemplateResponse("page.html", {"request": request, "title": "Link"})
 
 @app.post("/shorten")
 async def shorten_url(
     request: Request,
     url: str = Form(...),
     expiry: str = Form(...),
-    strategy: str = Form("cuckoo"),
+    strategy: str = Form("cuckoo"), # Using cuckoo as default
 ):
     """Shorten URL; collision strategy comes from form dropdown."""
     if strategy not in STRATEGIES:
@@ -815,9 +810,9 @@ async def shorten_url(
         response["warning"] = "The URL uses http — not secure. Consider using https."
     return JSONResponse(content=response)
 
-# -------------------------------
+
 # Benchmark Endpoints (must come before /{short_code})
-# -------------------------------
+
 @app.get("/benchmark")
 async def render_benchmark_page(request: Request):
     """Render the benchmark visualization page"""
@@ -983,9 +978,9 @@ async def redirect_to_original(request: Request, short_code: str):
     CLICK_STATS[used_strategy][short_code] = CLICK_STATS[used_strategy].get(short_code, 0) + 1
     return RedirectResponse(record["url"])
 
-# -------------------------------
+
 # Entry
-# -------------------------------
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
