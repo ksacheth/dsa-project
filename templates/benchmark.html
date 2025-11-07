@@ -608,17 +608,12 @@
                   <th>Collisions</th>
                   <th>Avg Probe</th>
                   <th>Max Probe</th>
-                  <th>Rehashes</th>
-                  <th>Avg Insert (μs)</th>
-                  <th>Total Insert (ms)</th>
-                  <th>Avg Lookup (μs)</th>
                 </tr>
               </thead>
               <tbody>`;
 
           const strategies = data.results[capacity];
-          const metrics = ['collision_count', 'avg_probe_length', 'max_probe_length', 'rehash_count',
-                           'avg_insertion_time_us', 'total_insertion_time_ms', 'avg_lookup_time_us'];
+          const metrics = ['collision_count', 'avg_probe_length', 'max_probe_length'];
 
           // Find best/worst for each metric
           const best = {};
@@ -636,10 +631,6 @@
               <td ${s.collision_count === best.collision_count ? 'class="metric-best"' : s.collision_count === worst.collision_count ? 'class="metric-worst"' : ''}>${s.collision_count.toLocaleString()}</td>
               <td ${s.avg_probe_length === best.avg_probe_length ? 'class="metric-best"' : s.avg_probe_length === worst.avg_probe_length ? 'class="metric-worst"' : ''}>${s.avg_probe_length}</td>
               <td ${s.max_probe_length === best.max_probe_length ? 'class="metric-best"' : s.max_probe_length === worst.max_probe_length ? 'class="metric-worst"' : ''}>${s.max_probe_length}</td>
-              <td ${s.rehash_count === best.rehash_count ? 'class="metric-best"' : s.rehash_count === worst.rehash_count ? 'class="metric-worst"' : ''}>${s.rehash_count}</td>
-              <td ${s.avg_insertion_time_us === best.avg_insertion_time_us ? 'class="metric-best"' : s.avg_insertion_time_us === worst.avg_insertion_time_us ? 'class="metric-worst"' : ''}>${s.avg_insertion_time_us}</td>
-              <td ${s.total_insertion_time_ms === best.total_insertion_time_ms ? 'class="metric-best"' : s.total_insertion_time_ms === worst.total_insertion_time_ms ? 'class="metric-worst"' : ''}>${s.total_insertion_time_ms}</td>
-              <td ${s.avg_lookup_time_us === best.avg_lookup_time_us ? 'class="metric-best"' : s.avg_lookup_time_us === worst.avg_lookup_time_us ? 'class="metric-worst"' : ''}>${s.avg_lookup_time_us}</td>
             </tr>`;
           });
 
@@ -687,16 +678,12 @@
               <th>Collisions</th>
               <th>Avg Probe</th>
               <th>Distribution σ</th>
-              <th>Avg Hash (μs)</th>
-              <th>Avg Insert (μs)</th>
-              <th>Avg Lookup (μs)</th>
             </tr>
           </thead>
           <tbody>`;
 
         const hashes = data.results;
-        const metrics = ['collision_count', 'avg_probe_length', 'distribution_std_dev',
-                         'avg_hash_time_us', 'avg_insertion_time_us', 'avg_lookup_time_us'];
+        const metrics = ['collision_count', 'avg_probe_length', 'distribution_std_dev'];
 
         // Find best/worst for each metric
         const best = {};
@@ -714,9 +701,6 @@
             <td ${h.collision_count === best.collision_count ? 'class="metric-best"' : h.collision_count === worst.collision_count ? 'class="metric-worst"' : ''}>${h.collision_count.toLocaleString()}</td>
             <td ${h.avg_probe_length === best.avg_probe_length ? 'class="metric-best"' : h.avg_probe_length === worst.avg_probe_length ? 'class="metric-worst"' : ''}>${h.avg_probe_length}</td>
             <td ${h.distribution_std_dev === best.distribution_std_dev ? 'class="metric-best"' : h.distribution_std_dev === worst.distribution_std_dev ? 'class="metric-worst"' : ''}>${h.distribution_std_dev}</td>
-            <td ${h.avg_hash_time_us === best.avg_hash_time_us ? 'class="metric-best"' : h.avg_hash_time_us === worst.avg_hash_time_us ? 'class="metric-worst"' : ''}>${h.avg_hash_time_us}</td>
-            <td ${h.avg_insertion_time_us === best.avg_insertion_time_us ? 'class="metric-best"' : h.avg_insertion_time_us === worst.avg_insertion_time_us ? 'class="metric-worst"' : ''}>${h.avg_insertion_time_us}</td>
-            <td ${h.avg_lookup_time_us === best.avg_lookup_time_us ? 'class="metric-best"' : h.avg_lookup_time_us === worst.avg_lookup_time_us ? 'class="metric-worst"' : ''}>${h.avg_lookup_time_us}</td>
           </tr>`;
         });
 
