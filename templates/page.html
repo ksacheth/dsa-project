@@ -7,7 +7,6 @@
   <title>{{ title }}</title>
   <link rel="stylesheet" href="/static/fonts.css" />
   <link rel="stylesheet" href="/static/styles.css" />
-  <link rel="stylesheet" href="/static/popup.css" />
   <script>
     async function shortenUrl() {
       const url = document.getElementById('url-input').value;
@@ -44,6 +43,13 @@
 </head>
 
 <body>
+  <nav class="navbar">
+    <a href="/" class="nav-brand">Linky</a>
+    <div class="nav-links">
+      <a href="/" class="nav-link active">Home</a>
+      <a href="/benchmark" class="nav-link">Benchmark</a>
+    </div>
+  </nav>
   <div class="main">
     <div class="title">Linky</div>
     <div class="url-input-container">

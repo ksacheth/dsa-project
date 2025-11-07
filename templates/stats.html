@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>URL Stats</title>
+  <link rel="stylesheet" href="/static/fonts.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <style>
+    body {
+      font-family: "IBM Plex Sans", sans-serif;
+      background-color: #fdfdfd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: white;
+      border-radius: 12px;
+      padding: 3rem;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      text-align: left;
+      max-width: 600px;
+      width: 90%;
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 2rem;
+      font-size: 2rem;
+      text-align: center;
+    }
+
+    p {
+      color: #555;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 1rem;
+    }
+
+    p:last-of-type {
+      border-bottom: none;
+    }
+
+    b {
+      color: #333;
+      font-weight: 600;
+      min-width: 120px;
+      display: inline-block;
+    }
+
+    a {
+      color: #c4a748;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    a:hover {
+      color: #b39537;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Short URL Statistics</h2>
+    <p><b>Short Code:</b> {{ stats.short_code }}</p>
+    <p><b>Original URL:</b> <a href="{{ stats.original_url }}">{{ stats.original_url }}</a></p>
+    <p><b>Clicks:</b> {{ stats.clicks }}</p>
+    <p><b>Expiry:</b> {{ stats.expiry }}</p>
+    <a href="/" class="back-link">← Back to Home</a>
+  </div>
+</body>
+</html>
+
