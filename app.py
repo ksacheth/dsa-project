@@ -833,7 +833,7 @@ async def shorten_url(
     request: Request,
     url: str = Form(...),
     expiry: str = Form(...),
-    strategy: str = Form("separate_chaining"),
+    strategy: str = Form("cuckoo"),
 ):
     """Shorten URL; collision strategy comes from form dropdown."""
     if strategy not in STRATEGIES:
@@ -848,7 +848,7 @@ async def shorten_url(
     counter = 0
     # time-based generation so same URL can produce different shortcodes
     short_code = generate_code_with_hash(
-        url, salt="v1", counter=counter, length=6, use_sha1=(strategy == "cuckoo")
+        url, salt="v1", counter=counter, length=6, use_sha1=False
     )
 
     # handle shortcode-level collisions by bumping counter + toggling hash
