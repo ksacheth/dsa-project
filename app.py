@@ -752,7 +752,10 @@ class BenchmarkRunner:
         return results, urls
 
 # In-memory storage for benchmark results
-benchmark_results_cache = {}
+benchmark_results_cache = {
+    "collision_strategies": [],
+    "hash_functions": []
+}
 
 # -------------------------------
 # Routes
@@ -830,11 +833,31 @@ async def run_collision_benchmark(
     try:
         capacities = [capacity]
 
+        # Check for duplicate test parameters
+        for cached_result in benchmark_results_cache["collision_strategies"]:
+            if (cached_result["test_params"]["url_count"] == url_count and
+                cached_result["test_params"]["capacities"] == capacities and
+                cached_result["test_params"]["hash_function"] == hash_function):
+                return JSONResponse(content={
+                    "success": False,
+                    "duplicate": True,
+                    "message": f"Test already run with these parameters: {url_count} URLs, {hash_function.upper()}, capacity {capacity}"
+                })
+
         logger.info(f"Starting collision strategy benchmark with {url_count} URLs using {hash_function} with capacity {capacity}")
         results, urls = BenchmarkRunner.benchmark_collision_strategies(url_count, capacities, hash_function)
 
-        # Cache results
-        benchmark_results_cache["collision_strategies"] = results
+        # Append results to cache
+        result_entry = {
+            "results": results,
+            "test_params": {
+                "url_count": url_count,
+                "capacities": capacities,
+                "hash_function": hash_function,
+                "sample_urls": urls[:50]  # Return first 50 URLs as sample
+            }
+        }
+        benchmark_results_cache["collision_strategies"].append(result_entry)
 
         return JSONResponse(content={
             "success": True,
@@ -858,11 +881,31 @@ async def run_hash_benchmark(
 ):
     """Run benchmark comparing hash functions"""
     try:
+        # Check for duplicate test parameters
+        for cached_result in benchmark_results_cache["hash_functions"]:
+            if (cached_result["test_params"]["url_count"] == url_count and
+                cached_result["test_params"]["capacity"] == capacity and
+                cached_result["test_params"]["collision_strategy"] == strategy):
+                return JSONResponse(content={
+                    "success": False,
+                    "duplicate": True,
+                    "message": f"Test already run with these parameters: {url_count} URLs, {strategy.replace('_', ' ').title()}, capacity {capacity}"
+                })
+
         logger.info(f"Starting hash function benchmark with {url_count} URLs using {strategy}")
         results, urls = BenchmarkRunner.benchmark_hash_functions(url_count, capacity, strategy)
 
-        # Cache results
-        benchmark_results_cache["hash_functions"] = results
+        # Append results to cache
+        result_entry = {
+            "results": results,
+            "test_params": {
+                "url_count": url_count,
+                "capacity": capacity,
+                "collision_strategy": strategy,
+                "sample_urls": urls[:50]  # Return first 50 URLs as sample
+            }
+        }
+        benchmark_results_cache["hash_functions"].append(result_entry)
 
         return JSONResponse(content={
             "success": True,
