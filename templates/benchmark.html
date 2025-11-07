@@ -414,8 +414,6 @@
             <option value="sha1">SHA1</option>
             <option value="sha256">SHA256</option>
             <option value="djb2">DJB2</option>
-            <option value="murmur3">MurmurHash3</option>
-            <option value="cityhash">CityHash</option>
           </select>
           <button class="btn btn-secondary" onclick="runCollisionBenchmark()" id="collision-btn">
             Run Collision Strategy Test
@@ -425,7 +423,7 @@
 
       <div class="control-section">
         <h3>Hash Function Benchmark</h3>
-        <p>Tests all 6 hash functions (MD5, SHA1, SHA256, DJB2, MurmurHash3, CityHash)</p>
+        <p>Tests all 4 hash functions (MD5, SHA1, SHA256, DJB2)</p>
         <div class="control-row">
           <label>URL Count:</label>
           <input type="number" id="hash-url-count" value="10000" min="1000" max="50000" step="1000" />
@@ -672,7 +670,6 @@
             <th>Collisions</th>
             <th>Avg Probe</th>
             <th>Distribution σ</th>
-            <th>Chi-Square</th>
             <th>Avg Hash (μs)</th>
             <th>Avg Insert (μs)</th>
             <th>Avg Lookup (μs)</th>
@@ -681,7 +678,7 @@
         <tbody>`;
 
       const hashes = data.results;
-      const metrics = ['collision_count', 'avg_probe_length', 'distribution_std_dev', 'chi_square_statistic',
+      const metrics = ['collision_count', 'avg_probe_length', 'distribution_std_dev',
                        'avg_hash_time_us', 'avg_insertion_time_us', 'avg_lookup_time_us'];
 
       // Find best/worst for each metric
@@ -700,7 +697,6 @@
           <td ${h.collision_count === best.collision_count ? 'class="metric-best"' : h.collision_count === worst.collision_count ? 'class="metric-worst"' : ''}>${h.collision_count.toLocaleString()}</td>
           <td ${h.avg_probe_length === best.avg_probe_length ? 'class="metric-best"' : h.avg_probe_length === worst.avg_probe_length ? 'class="metric-worst"' : ''}>${h.avg_probe_length}</td>
           <td ${h.distribution_std_dev === best.distribution_std_dev ? 'class="metric-best"' : h.distribution_std_dev === worst.distribution_std_dev ? 'class="metric-worst"' : ''}>${h.distribution_std_dev}</td>
-          <td ${h.chi_square_statistic === best.chi_square_statistic ? 'class="metric-best"' : h.chi_square_statistic === worst.chi_square_statistic ? 'class="metric-worst"' : ''}>${h.chi_square_statistic}</td>
           <td ${h.avg_hash_time_us === best.avg_hash_time_us ? 'class="metric-best"' : h.avg_hash_time_us === worst.avg_hash_time_us ? 'class="metric-worst"' : ''}>${h.avg_hash_time_us}</td>
           <td ${h.avg_insertion_time_us === best.avg_insertion_time_us ? 'class="metric-best"' : h.avg_insertion_time_us === worst.avg_insertion_time_us ? 'class="metric-worst"' : ''}>${h.avg_insertion_time_us}</td>
           <td ${h.avg_lookup_time_us === best.avg_lookup_time_us ? 'class="metric-best"' : h.avg_lookup_time_us === worst.avg_lookup_time_us ? 'class="metric-worst"' : ''}>${h.avg_lookup_time_us}</td>
@@ -712,9 +708,8 @@
       html += `<div class="summary">
         <h4>Key Insights</h4>
         <p><strong>Distribution σ (Standard Deviation):</strong> Lower is better - indicates more uniform distribution across buckets</p>
-        <p><strong>Chi-Square Statistic:</strong> Lower values indicate better uniformity. Values close to capacity indicate good distribution.</p>
         <p><strong>Collisions:</strong> Lower is better - fewer items map to same bucket</p>
-        <p><strong>Hash Computation Time:</strong> Speed of computing the hash (MD5/SHA256 are cryptographic, so slower; DJB2/Murmur3 are faster)</p>
+        <p><strong>Hash Computation Time:</strong> Speed of computing the hash (MD5/SHA256 are cryptographic, so slower; DJB2 is faster)</p>
       </div>`;
 
       container.innerHTML = html;

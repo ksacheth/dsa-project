@@ -81,72 +81,12 @@ def hash_fn_djb2(s: str) -> int:
         h = ((h << 5) + h) + ord(c)  # h * 33 + c
     return h & 0xFFFFFFFFFFFFFFFF
 
-def hash_fn_murmur3(s: str) -> int:
-    """Simplified MurmurHash3 implementation"""
-    data = s.encode('utf-8')
-    c1 = 0xcc9e2d51
-    c2 = 0x1b873593
-    h = 0x9747b28c  # seed
-
-    for i in range(0, len(data) - 3, 4):
-        k = int.from_bytes(data[i:i+4], 'little')
-        k = (k * c1) & 0xFFFFFFFF
-        k = ((k << 15) | (k >> 17)) & 0xFFFFFFFF
-        k = (k * c2) & 0xFFFFFFFF
-
-        h ^= k
-        h = ((h << 13) | (h >> 19)) & 0xFFFFFFFF
-        h = (h * 5 + 0xe6546b64) & 0xFFFFFFFF
-
-    # Handle remaining bytes
-    remainder = len(data) % 4
-    if remainder:
-        k = 0
-        for i in range(remainder):
-            k |= data[len(data) - remainder + i] << (i * 8)
-        k = (k * c1) & 0xFFFFFFFF
-        k = ((k << 15) | (k >> 17)) & 0xFFFFFFFF
-        k = (k * c2) & 0xFFFFFFFF
-        h ^= k
-
-    h ^= len(data)
-    h ^= (h >> 16)
-    h = (h * 0x85ebca6b) & 0xFFFFFFFF
-    h ^= (h >> 13)
-    h = (h * 0xc2b2ae35) & 0xFFFFFFFF
-    h ^= (h >> 16)
-
-    return h
-
-def hash_fn_cityhash(s: str) -> int:
-    """Simplified CityHash-like implementation"""
-    data = s.encode('utf-8')
-    if len(data) <= 16:
-        return hash_fn_murmur3(s)
-
-    # CityHash constants
-    k0 = 0xc3a5c85c97cb3127
-    k1 = 0xb492b66fbe98f273
-    k2 = 0x9ae16a3b2f90404f
-
-    h = len(data) * k2
-    for i in range(0, len(data) - 7, 8):
-        chunk = int.from_bytes(data[i:i+8], 'little')
-        h ^= chunk
-        h = (h * k0) & 0xFFFFFFFFFFFFFFFF
-        h = ((h << 31) | (h >> 33)) & 0xFFFFFFFFFFFFFFFF
-        h = (h * k1) & 0xFFFFFFFFFFFFFFFF
-
-    return h
-
 # Hash function registry
 HASH_FUNCTIONS = {
     "md5": hash_fn_md5,
     "sha1": hash_fn_sha1,
     "sha256": hash_fn_sha256,
     "djb2": hash_fn_djb2,
-    "murmur3": hash_fn_murmur3,
-    "cityhash": hash_fn_cityhash,
 }
 
 # Shortcode generator — includes timestamp so same URL can yield different codes
@@ -797,13 +737,8 @@ class BenchmarkRunner:
                 # Standard deviation
                 variance = sum((x - avg_bucket_size) ** 2 for x in sizes) / len(sizes)
                 std_dev = variance ** 0.5
-
-                # Chi-square test for uniformity
-                expected = url_count / capacity
-                chi_square = sum((size - expected) ** 2 / expected for size in sizes if expected > 0)
             else:
                 std_dev = 0
-                chi_square = 0
 
             # Get metrics
             metrics = hashmap.get_metrics_summary()
@@ -811,7 +746,6 @@ class BenchmarkRunner:
             metrics["strategy"] = strategy
             metrics["test_url_count"] = url_count
             metrics["distribution_std_dev"] = round(std_dev, 4)
-            metrics["chi_square_statistic"] = round(chi_square, 2)
 
             results[hash_fn] = metrics
 
