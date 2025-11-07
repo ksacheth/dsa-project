@@ -766,6 +766,7 @@ async def shorten_url(
     url: str = Form(...),
     expiry: str = Form(...),
     strategy: str = Form("cuckoo"), # Using cuckoo as default
+    custom_code: str = Form(None), # Optional custom short code
 ):
     """Shorten URL; collision strategy comes from form dropdown."""
     if strategy not in STRATEGIES:
@@ -777,22 +778,50 @@ async def shorten_url(
     stats = CLICK_STATS[strategy]
     heap = expiry_heaps[strategy]
 
-    counter = 0
-    # time-based generation so same URL can produce different shortcodes
-    short_code = generate_code_with_hash(
-        url, salt="v1", counter=counter, length=6, use_sha1=False
-    )
+    # If custom code is provided, validate and check availability
+    if custom_code:
+        custom_code = custom_code.strip()
 
-    # handle shortcode-level collisions by bumping counter + toggling hash
-    while store.get(short_code) and store.get(short_code).get("url") != url:
-        counter += 1
+        # Validate format: 3-10 alphanumeric characters
+        if not custom_code or len(custom_code) < 3 or len(custom_code) > 10:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Custom code must be 3-10 characters long"}
+            )
+
+        if not custom_code.isalnum():
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Custom code must contain only letters and numbers"}
+            )
+
+        # Check if custom code is available across all strategies
+        for strat in STRATEGIES:
+            if stores[strat].get(custom_code):
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": f"Custom code '{custom_code}' is already taken"}
+                )
+
+        short_code = custom_code
+    else:
+        # Generate code using hash
+        counter = 0
+        # time-based generation so same URL can produce different shortcodes
         short_code = generate_code_with_hash(
-            url,
-            salt="v1",
-            counter=counter,
-            length=6,
-            use_sha1=(counter % 2 == 0),
+            url, salt="v1", counter=counter, length=6, use_sha1=False
         )
+
+        # handle shortcode-level collisions by bumping counter + toggling hash
+        while store.get(short_code) and store.get(short_code).get("url") != url:
+            counter += 1
+            short_code = generate_code_with_hash(
+                url,
+                salt="v1",
+                counter=counter,
+                length=6,
+                use_sha1=(counter % 2 == 0),
+            )
 
     expiry_time = None
     if expiry != "never":
@@ -809,6 +838,40 @@ async def shorten_url(
     if url.startswith("http://"):
         response["warning"] = "The URL uses http — not secure. Consider using https."
     return JSONResponse(content=response)
+
+
+@app.get("/api/check-availability/{short_code}")
+async def check_availability(short_code: str):
+    """Check if a custom short code is available"""
+    # Validate format
+    if not short_code or len(short_code) < 3 or len(short_code) > 10:
+        return JSONResponse(
+            content={
+                "available": False,
+                "reason": "Code must be 3-10 characters long"
+            }
+        )
+
+    if not short_code.isalnum():
+        return JSONResponse(
+            content={
+                "available": False,
+                "reason": "Code must contain only letters and numbers"
+            }
+        )
+
+    # Check availability across all strategies
+    for strategy in STRATEGIES:
+        cleanup_expired(strategy)
+        if stores[strategy].get(short_code):
+            return JSONResponse(
+                content={
+                    "available": False,
+                    "reason": "Code is already taken"
+                }
+            )
+
+    return JSONResponse(content={"available": True})
 
 
 # Benchmark Endpoints (must come before /{short_code})

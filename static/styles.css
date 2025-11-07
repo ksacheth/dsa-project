@@ -74,11 +74,18 @@ body {
 
 .url-input-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100%;
   max-width: 600px;
   margin-top: 20px;
+  gap: 12px;
+}
+
+.url-row {
+  display: flex;
+  width: 100%;
 }
 
 .url-input {
@@ -106,23 +113,71 @@ body {
   cursor: pointer;
   outline: none;
   transition: border-color 0.3s ease;
+  border-radius: 0 8px 8px 0;
 }
 
 .expiry-select:focus {
   border-color: #c4a748;
 }
 
+.custom-code-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.custom-code-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #eee;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  font-family: "IBM Plex Sans", sans-serif;
+  transition: border-color 0.3s ease;
+}
+
+.custom-code-input:focus {
+  border-color: #c4a748;
+}
+
+.check-btn {
+  padding: 12px 20px;
+  border: 2px solid #6c7fdb;
+  background-color: #6c7fdb;
+  color: white;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-family: "IBM Plex Serif", serif;
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
+}
+
+.check-btn:hover {
+  background-color: #5a6bc4;
+}
+
+.availability-status {
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: "IBM Plex Sans", sans-serif;
+  min-width: 120px;
+}
+
 .generate-btn {
   padding: 15px 20px;
   border: 2px solid #c4a748;
-  border-left: none;
   background-color: #c4a748;
   color: white;
-  border-radius: 0 8px 8px 0;
+  border-radius: 8px;
   font-size: 1.1rem;
   cursor: pointer;
   font-family: "IBM Plex Serif", serif;
   transition: background-color 0.3s ease;
+  width: 100%;
 }
 
 .generate-btn:hover {

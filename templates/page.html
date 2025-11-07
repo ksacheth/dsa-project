@@ -8,15 +8,65 @@
   <link rel="stylesheet" href="/static/fonts.css" />
   <link rel="stylesheet" href="/static/styles.css" />
   <script>
+    async function checkAvailability() {
+      const customCode = document.getElementById('custom-code-input').value.trim();
+      const statusElement = document.getElementById('availability-status');
+
+      if (!customCode) {
+        statusElement.textContent = 'Please enter a custom code';
+        statusElement.style.color = '#ff6b6b';
+        return;
+      }
+
+      // Validate custom code format (alphanumeric, 3-10 characters)
+      if (!/^[a-zA-Z0-9]{3,10}$/.test(customCode)) {
+        statusElement.textContent = 'Code must be 3-10 alphanumeric characters';
+        statusElement.style.color = '#ff6b6b';
+        return;
+      }
+
+      statusElement.textContent = 'Checking...';
+      statusElement.style.color = '#666';
+
+      try {
+        const response = await fetch(`/api/check-availability/${customCode}`);
+        const data = await response.json();
+
+        if (data.available) {
+          statusElement.textContent = '✓ Available!';
+          statusElement.style.color = '#51cf66';
+        } else {
+          statusElement.textContent = '✗ Not available';
+          statusElement.style.color = '#ff6b6b';
+        }
+      } catch (error) {
+        statusElement.textContent = 'Error checking availability';
+        statusElement.style.color = '#ff6b6b';
+      }
+    }
+
     async function shortenUrl() {
       const url = document.getElementById('url-input').value;
       const expiry = document.getElementById('expiry-select').value;
+      const customCode = document.getElementById('custom-code-input').value.trim();
+
+      const params = {url: url, expiry: expiry};
+      if (customCode) {
+        params.custom_code = customCode;
+      }
+
       const response = await fetch('/shorten', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({url: url, expiry: expiry})
+        body: new URLSearchParams(params)
       });
       const data = await response.json();
+
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
       // Show the popup with the shortened URL
       const popup = document.getElementById('popup');
       const overlay = document.getElementById('overlay');
@@ -38,6 +88,10 @@
       const overlay = document.getElementById('overlay');
       popup.style.display = 'none';
       overlay.style.display = 'none';
+
+      // Clear custom code and status
+      document.getElementById('custom-code-input').value = '';
+      document.getElementById('availability-status').textContent = '';
     }
   </script>
 </head>
@@ -53,13 +107,20 @@
   <div class="main">
     <div class="title">Linky</div>
     <div class="url-input-container">
-      <input type="text" id="url-input" class="url-input" placeholder="Enter URL here..." />
-      <select id="expiry-select" class="expiry-select">
-        <option value="30">30 seconds</option>
-        <option value="60">60 seconds</option>
-        <option value="180">3 minutes</option>
-        <option value="never">Never expire</option>
-      </select>
+      <div class="url-row">
+        <input type="text" id="url-input" class="url-input" placeholder="Enter URL here..." />
+        <select id="expiry-select" class="expiry-select">
+          <option value="30">30 seconds</option>
+          <option value="60">60 seconds</option>
+          <option value="180">3 minutes</option>
+          <option value="never">Never expire</option>
+        </select>
+      </div>
+      <div class="custom-code-container">
+        <input type="text" id="custom-code-input" class="custom-code-input" placeholder="Custom code (optional)" maxlength="10" />
+        <button class="check-btn" onclick="checkAvailability()">Check</button>
+        <span id="availability-status" class="availability-status"></span>
+      </div>
       <button class="generate-btn" onclick="shortenUrl()">Generate</button>
     </div>
   </div>
